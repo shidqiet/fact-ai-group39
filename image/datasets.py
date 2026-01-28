@@ -1,4 +1,5 @@
 import torch
+import torchvision
 from torch.utils.data import Dataset
 from torchvision import datasets, transforms
 
@@ -110,6 +111,37 @@ class CIFAR10(Dataset):
             self.y = torch.tensor(
                 [label_map[int(label)] for label in self.y], device=device
             )
+
+    def __getitem__(self, index):
+        return self.x[index], self.y[index]
+
+    def __len__(self):
+        return self.x.size(0)
+
+
+class EMNIST(Dataset):
+    def __init__(self, train=True, download=True, split="digits", device="cuda"):
+        transform = torchvision.transforms.Compose(
+            [
+                lambda img: torchvision.transforms.functional.rotate(img, -90),
+                lambda img: torchvision.transforms.functional.hflip(img),
+                torchvision.transforms.ToTensor(),
+            ]
+        )
+        dataset = datasets.EMNIST(
+            root="./data",
+            train=train,
+            split=split,
+            download=download,
+            transform=transform,
+        )
+        self.x = torch.empty(len(dataset), 1, 28, 28, device=device)
+        self.y = torch.empty(len(dataset), dtype=torch.long, device=device)
+        for i, (img, label) in enumerate(dataset):
+            self.x[i] = img
+            self.y[i] = label
+        if split == "letters":
+            self.y -= 1
 
     def __getitem__(self, index):
         return self.x[index], self.y[index]
