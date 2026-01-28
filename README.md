@@ -1,1 +1,56 @@
-# fact-ai-group39
+# FACT AI Group 39 Repository
+
+This repository is for the FACT (Fairness, Accountability, Confidentiality, and Transparency) in AI course at the University of Amsterdam.
+
+We reproduce the experiments from **“Bilinear MLPs enable weight-based mechanistic interpretability”** ([Pearce et al., 2024](https://arxiv.org/abs/2410.08417)). We use the publicly available code released by the authors, referencing both their [tutorial repository](https://github.com/tdooms/bilinear-decomposition) and a [separate research repository](https://github.com/tdooms/bilinear-interp) for the full implementation needed to reproduce the figures.
+
+---
+
+## Setup
+
+Conda environments are provided for CPU and GPU:
+
+```bash
+# CPU
+conda env create -f environment_cpu.yml
+
+# GPU
+conda env create -f environment_gpu.yml
+```
+
+---
+
+## Structure
+
+```
+image/         # Image classification models using bilinear layers
+language/      # Transformer-based language models with bilinear MLPs
+sae/           # Sparse Autoencoders for feature interactions
+shared/        # Bilinear layer implementation
+reproduce/     # Reproduction notebooks
+extension/     # Additional experiments on new datasets
+```
+
+* **reproduce/image_classification/**: one notebook per section of the paper (4.1, 4.2, 4.3, and 4.4)
+* **reproduce/language_modeling/**: training (transformer + SAE) and visualization (sections 5.1 and 5.2)
+* **extension/**: experiments beyond the original paper.
+
+Figures:
+
+* `figures/reproduce/` → reproduced figures (matching paper numbering)
+* `figures/extension/` → figures from our additional experiments
+
+---
+
+## Citation
+
+Please cite the original paper:
+
+```bibtex
+@article{pearce2024bilinear,
+  title={Bilinear MLPs enable weight-based mechanistic interpretability},
+  author={Pearce, Michael T and Dooms, Thomas and Rigg, Alice and Oramas, Jose M and Sharkey, Lee},
+  journal={arXiv preprint arXiv:2410.08417},
+  year={2024}
+}
+```
