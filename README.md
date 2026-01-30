@@ -44,8 +44,8 @@ Figures:
 
 ## Important Notes
 
-* Section 4.1 includes comparisons between Bilinear GLU, ReGLU, and Linear + ReLU in terms of accuracy.
-* Plotly visualizations do not render properly on GitHub, so we include the `figures/` folder for easy access to all results.
+* Section 4.1 includes comparisons between Bilinear GLU, ReGLU, and Linear + ReLU test-set accuracy in MNIST and FMNIST.
+* Plotly visualizations do not render properly on GitHub, so we include the `figures/` folder for access to all results. Visualizations created with Matplotlib are kept only in the notebooks.  
 * Language model and SAE training require GPU, image classification experiments can run on CPU.
 * Language model and SAE training may require adjusting the dataset path and model name, see the code for details.
 * For questions or issues, feel free to open an issue in this repository.
