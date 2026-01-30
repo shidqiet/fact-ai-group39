@@ -27,18 +27,27 @@ image/         # Image classification models using bilinear layers
 language/      # Transformer-based language models with bilinear MLPs
 sae/           # Sparse Autoencoders for feature interactions
 shared/        # Bilinear layer implementation
-reproduce/     # Reproduction notebooks
-extension/     # Additional experiments on new datasets
+reproduce/     # Reproduction codes and notebooks
+extension/     # Additional experiments
 ```
 
 * **reproduce/image_classification/**: one notebook per section of the paper (4.1, 4.2, 4.3, and 4.4)
-* **reproduce/language_modeling/**: training (transformer + SAE) and visualization (sections 5.1 and 5.2)
+* **reproduce/language_modeling/**: training (transformer + SAE) and visualization
 * **extension/**: experiments beyond the original paper.
 
 Figures:
 
 * `figures/reproduce/` → reproduced figures (matching paper numbering)
 * `figures/extension/` → figures from our additional experiments
+
+---
+
+## Important Notes
+
+* Section 4.1 includes comparisons between Bilinear GLU, ReGLU, and Linear + ReLU in terms of accuracy.
+* Plotly visualizations do not render properly on GitHub, so we include the `figures/` folder for easy access to all results.
+* Language model and SAE training require GPU; image classification experiments can run on CPU.
+* For questions or issues, feel free to open an issue in this repository.
 
 ---
 
