@@ -1,10 +1,11 @@
 import pandas as pd
 import torch
-import wandb
 from einops import *
 from jaxtyping import Float
 from torch import Tensor, nn
 from torch.nn.functional import scaled_dot_product_attention
+
+# import wandb
 from transformers import (
     AutoTokenizer,
     DataCollatorForLanguageModeling,
@@ -119,14 +120,7 @@ class Attention(nn.Module):
         q, k = self.rotary(q, k)
 
         if self.training:
-            z = scaled_dot_product_attention(
-                q,
-                k,
-                v,
-                attn_mask=attn_mask[:, None, None, :],
-                dropout_p=0.0,
-                is_causal=True,
-            )
+            z = scaled_dot_product_attention(q, k, v, dropout_p=0.0, is_causal=True)
         else:
             scores = einsum(
                 q,
@@ -328,7 +322,7 @@ class Transformer(PreTrainedModel):
         self, train, project, lr=1e-3, wd=0.1, batch_size=128, callbacks=None, **kwargs
     ):
         training_args = TrainingArguments(
-            output_dir="_checkpoints",
+            output_dir=project,
             learning_rate=lr,
             warmup_steps=50,
             logging_steps=10,
@@ -338,7 +332,7 @@ class Transformer(PreTrainedModel):
             per_device_train_batch_size=batch_size,
             weight_decay=wd,
             do_eval=False,
-            report_to="wandb" if project else "none",
+            report_to="none",
             remove_unused_columns=True,
             **kwargs,
         )
@@ -352,11 +346,9 @@ class Transformer(PreTrainedModel):
             callbacks=callbacks,
         )
 
-        if project:
-            wandb.init(project=project, config=self.config)
+        # if project: wandb.init(project=project, config=self.config)
         trainer.train()
-        if project:
-            wandb.finish()
+        # if project: wandb.finish()
 
         return trainer
 

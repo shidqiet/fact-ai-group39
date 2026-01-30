@@ -28,7 +28,8 @@ class BaseSampler:
             in_batch,
         )
 
-        self.loader = DataLoader(dataset, batch_size=in_batch)
+        # drop_last ensures every buffered batch matches the expected shape
+        self.loader = DataLoader(dataset, batch_size=in_batch, drop_last=True)
         self.iter = iter(self.loader)
 
         self.start, self.end = 0, 0
@@ -91,10 +92,10 @@ class ShuffleSampler(BaseSampler):
 
     @torch.no_grad()
     def _extract(self, input_ids):
+        container = {}
         with torch.no_grad(), self.sight.trace(input_ids, validate=False, scan=False):
-            saved = self.sight[self.point].save()
-            self.sight[self.point].stop()
-        return saved
+            container["saved"] = self.sight[self.point].save()
+        return container["saved"].float()
 
     def __iter__(self):
         n_steps = (self.n_batches * self.in_batch * self.n_ctx) // self.out_batch
@@ -120,9 +121,10 @@ class MultiSampler(BaseSampler):
 
     @torch.no_grad()
     def _extract(self, input_ids):
+        container = {}
         with torch.no_grad(), self.sight.trace(input_ids, validate=False, scan=False):
-            saved = [self.sight[point].save() for point in self.points]
-        return torch.stack(saved, dim=1)
+            container["saved"] = [self.sight[point].save() for point in self.points]
+        return torch.stack(container["saved"], dim=1)
 
     def __iter__(self):
         while True:

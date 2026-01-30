@@ -127,13 +127,42 @@ class Sight(LanguageModel):
 
         point = point.replace("-", "_")
 
-        return dict(
-            resid_pre=self._envoy.transformer.h[layer].input,
-            resid_mid=self._envoy.transformer.h[layer].n2.input,
-            resid_post=self._envoy.transformer.h[layer].output,
-            mlp_in=self._envoy.transformer.h[layer].n2.output,
-            mlp_out=self._envoy.transformer.h[layer].mlp.output,
-            attn_out=self._envoy.transformer.h[layer].attn.output,
-            pattern=self._envoy.transformer.h[layer].attn.softmax.output,
-            scores=self._envoy.transformer.h[layer].attn.softmax.input[0][0],
-        )[point]
+        root = getattr(self, "model", None)
+        if root is None:
+            root = getattr(self, "_envoy", None)
+        if root is None:
+            root = self
+
+        if point == "resid_pre":
+            return root.transformer.h[layer].input
+
+        elif point == "resid_mid":
+            # input to n2
+            return root.transformer.h[layer].n2.input
+
+        elif point == "resid_post":
+            return root.transformer.h[layer].output
+
+        elif point == "mlp_in":
+            # output of n2 (i.e., input to MLP)
+            return root.transformer.h[layer].n2.output
+
+        elif point == "mlp_out":
+            return root.transformer.h[layer].mlp.output
+
+        elif point == "attn_out":
+            return root.transformer.h[layer].attn.output
+
+        elif point == "pattern":
+            # attention probabilities (softmax output)
+            return root.transformer.h[layer].attn.softmax.output
+
+        elif point == "scores":
+            # raw attention scores (softmax input)
+            return root.transformer.h[layer].attn.softmax.input
+
+        else:
+            raise KeyError(
+                f"Unknown point '{point}'. "
+                "Expected one of: resid_pre, resid_mid, resid_post, mlp_in, mlp_out, attn_out, pattern, scores."
+            )

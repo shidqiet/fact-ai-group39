@@ -231,8 +231,11 @@ class SAE(nn.Module):
         metrics["mean_inactive"] = self.inactive.mean()
 
         metrics["mse"] = mse
-        metrics["nmse"] = mse / x.pow(2).mean()
+        # Compute norm on CPU to avoid MPS tensor size limits
+        x_norm_sq_mean = x.detach().cpu().pow(2).mean().to(mse.device)
+        metrics["nmse"] = mse / x_norm_sq_mean
 
+        metrics["l0"] = (x_hid > 0).sum(-1).float().mean()
         metrics["l1"] = x_hid.sum(-1).mean()
 
         self.inactive += 1
@@ -258,22 +261,53 @@ class SAE(nn.Module):
     def _e2e_step(self, sight, batch):
         """Sample and patch in the reconstruction, retuning the global loss"""
 
+        import torch.nn.functional as F
+
+        container = {}
         with torch.no_grad(), sight.trace(batch, validate=False, scan=False):
             x = sight[self.point].save()
-            clean = sight.output.loss.save()
+            output = sight.output.save()
+
+        # Compute loss from logits (next-token prediction)
+        logits = output.logits
+        # Shift for next-token prediction: predict token[i+1] from token[i]
+        shift_logits = logits[..., :-1, :].contiguous()
+        shift_labels = batch[..., 1:].contiguous()
+        loss_clean = F.cross_entropy(
+            shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1)
+        )
+        container["clean"] = loss_clean
 
         x_hat, x_hid = self(x)
 
+        patched = x_hat.detach().clone()
         with torch.no_grad(), sight.trace(batch, validate=False, scan=False):
-            sight[self.target][:] = x_hat
-            loss = sight.output.loss.save()
+            sight[self.target][:] = patched
+            output_patched = sight.output.save()
 
+        logits_patched = output_patched.logits
+        shift_logits_patched = logits_patched[..., :-1, :].contiguous()
+        loss_patched = F.cross_entropy(
+            shift_logits_patched.view(-1, shift_logits_patched.size(-1)),
+            shift_labels.view(-1),
+        )
+        container["loss"] = loss_patched
+
+        zero = torch.zeros_like(patched)
         with torch.no_grad(), sight.trace(batch, validate=False, scan=False):
-            sight[self.target][:] = 0
-            corrupt = sight.output.loss.save()
+            sight[self.target][:] = zero
+            output_corrupt = sight.output.save()
+
+        logits_corrupt = output_corrupt.logits
+        shift_logits_corrupt = logits_corrupt[..., :-1, :].contiguous()
+        loss_corrupt = F.cross_entropy(
+            shift_logits_corrupt.view(-1, shift_logits_corrupt.size(-1)),
+            shift_labels.view(-1),
+        )
+        container["corrupt"] = loss_corrupt
 
         metrics = self.metrics(x, x_hid, x_hat)
-        return clean, corrupt, loss, metrics
+        return container["clean"], container["corrupt"], container["loss"], metrics
 
     def fit(self, model, train, validate, project: str | None = None):
         """A general fit function with a default training loop"""
@@ -290,7 +324,14 @@ class SAE(nn.Module):
             ),
         ]
 
-        total = self.config.n_buffers
+        # Calculate how many batches (steps) are in a single buffer
+        tokens_in_buffer = (
+            self.config.n_batches * self.config.in_batch * self.config.n_ctx
+        )
+        steps_per_buffer = tokens_in_buffer // self.config.out_batch
+
+        # Total steps = steps per buffer * number of buffers
+        total = self.config.n_buffers * steps_per_buffer
 
         lr = self.config.lr
         optimizer = (
@@ -325,5 +366,13 @@ class SAE(nn.Module):
 
             if project:
                 wandb.log(metrics)
+
+        # Print final metrics
+        print("\n=== Training Complete ===")
+        print(f"Final Added Loss:   {added:.4f}")
+        print(f"Final L1:   {metrics['l1']:.4f}")
+        print(f"Final NMSE: {metrics['nmse']:.4f}")
+        print("=======================\n")
+
         if project:
             wandb.finish()
