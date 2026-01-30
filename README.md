@@ -31,14 +31,14 @@ reproduce/     # Reproduction codes and notebooks
 extension/     # Additional experiments
 ```
 
-* **reproduce/image_classification/**: one notebook per section of the paper (4.1, 4.2, 4.3, and 4.4)
-* **reproduce/language_modeling/**: training (transformer + SAE) and visualization
-* **extension/**: experiments beyond the original paper.
+* `reproduce/image_classification/`: one notebook per section of the paper (4.1, 4.2, 4.3, and 4.4)
+* `reproduce/language_modeling/`: training (transformer + SAE) and visualization
+* `extension/`: experiments beyond the original paper.
 
 Figures:
 
-* `figures/reproduce/` → reproduced figures (matching paper numbering)
-* `figures/extension/` → figures from our additional experiments
+* `figures/reproduce/`: reproduced figures (matching paper numbering)
+* `figures/extension/`: figures from our additional experiments
 
 ---
 
