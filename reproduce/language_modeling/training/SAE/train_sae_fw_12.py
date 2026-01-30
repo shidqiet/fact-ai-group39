@@ -1,3 +1,10 @@
+import sys
+from pathlib import Path
+
+ROOT = Path().resolve().parents[3]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))
+
 import os
 
 import torch
@@ -12,7 +19,7 @@ from language.transformer import Transformer
 from sae import SAE, Point, SAEConfig
 
 device = "cuda"
-name = "Julianvn/facts-fw-med-good"
+name = "Julianvn/facts-fw-med-good"  # TODO: change with your own trained fineweb model
 model = Transformer.from_pretrained(name).to(device)
 SAE_CTX = 128
 

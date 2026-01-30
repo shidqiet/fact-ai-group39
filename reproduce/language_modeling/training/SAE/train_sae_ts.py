@@ -1,3 +1,10 @@
+import sys
+from pathlib import Path
+
+ROOT = Path().resolve().parents[3]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))
+
 import os
 
 import torch
@@ -12,7 +19,7 @@ from language.transformer import Transformer
 from sae import SAE, Point, SAEConfig
 
 device = "cuda"
-name = "Julianvn/facts_ts-new"
+name = "Julianvn/facts_ts-new"  # TODO: change with your own trained tinystories model
 model = Transformer.from_pretrained(name).to(device)
 SAE_CTX = 128
 
@@ -20,7 +27,7 @@ dataset = (
     load_from_disk("tinystories_tokenized_clean")
     .select_columns(["input_ids"])
     .with_format("torch")
-)
+)  # TODO: change with your own cleaned tinystories dataset
 
 
 @track_emissions(output_file="emissions_sae_ts.csv")

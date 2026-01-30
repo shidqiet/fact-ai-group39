@@ -1,3 +1,10 @@
+import sys
+from pathlib import Path
+
+ROOT = Path().resolve().parents[3]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))
+
 from codecarbon import track_emissions
 from datasets import load_from_disk
 
@@ -18,7 +25,9 @@ def train():
     ).cuda()
     model.summary()
 
-    dataset = load_from_disk("./tinystories_tokenized")
+    dataset = load_from_disk(
+        "./tinystories_tokenized"
+    )  # TODO: change with your own cleaned tinystories dataset
     model.fit(
         dataset["train"],
         project="ts_checkpoints",
